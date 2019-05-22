@@ -10,14 +10,6 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:fbf696b8af25bb4a791792b90cab2cfea212fac0ac0307ef72c298c5ebc1638b"
-  name = "github.com/dghubble/sling"
-  packages = ["."]
-  pruneopts = ""
-  revision = "e2624bf29a7de45ab0802b09aea94ca0a7815c5f"
-  version = "v1.2.0"
-
-[[projects]]
   digest = "1:9ab1b1c637d7c8f49e39d8538a650d7eb2137b076790cff69d160823b505964c"
   name = "github.com/gobwas/glob"
   packages = [
