@@ -43,6 +43,7 @@ type kongRouteFetch struct {
 	ID           string   `json:"id"`
 	Paths        []string `json:"paths"`
 	PreserveHost bool     `json:"preserve_host"`
+	StripPath    bool     `json:"strip_path"`
 }
 type kongRoutes struct {
 	Routes   []kongRouteFetch `json:"data"`
@@ -50,6 +51,7 @@ type kongRoutes struct {
 }
 type kongRoutePatch struct {
 	PreserveHost bool `json:"preserve_host"`
+	StripPath    bool `json:"strip_path"`
 }
 
 func main() {
@@ -94,7 +96,7 @@ func main() {
 
 func patchKong(path string) {
 	// setup a periodic scan (every 10s) of the kong routes for one with the given path
-	// when we find it, check that it has preserve_host: true and patch it if not
+	// when we find it, check that it has preserve_host: true/strip_path: false and patch it if not
 	// when we get bored of looking for it (after 30s without it), stop
 
 	// this code assumes there aren't very many routes managed by kong; it ignores
@@ -115,6 +117,7 @@ func patchKong(path string) {
 					if route.PreserveHost == false {
 						kongPatch := &kongRoutePatch{
 							PreserveHost: true,
+							StripPath: false,
 						}
 						patched := &kongRouteFetch{}
 						resp, err := sling.New().Base(kongURL).Patch(fmt.Sprintf("routes/%s", route.ID)).BodyJSON(kongPatch).ReceiveSuccess(patched)
@@ -127,6 +130,23 @@ func patchKong(path string) {
 						}
 					} else {
 						log.Printf("nothing to do; route for %s already has preserve_host set\n", path)
+					}
+					if route.StripPath == true {
+						kongPatch := &kongRoutePatch{
+							PreserveHost: true,
+							StripPath: false,
+						}
+						patched := &kongRouteFetch{}
+						resp, err := sling.New().Base(kongURL).Patch(fmt.Sprintf("routes/%s", route.ID)).BodyJSON(kongPatch).ReceiveSuccess(patched)
+						if err == nil && resp.StatusCode == 200 {
+							log.Printf("successfully patched kong route: %s\n", patched.ID)
+						} else if err != nil {
+							log.Printf("failed to patch kong route: %s\n", err.Error())
+						} else {
+							log.Printf("failed to patch kong route: [%d] %s\n", resp.StatusCode, resp.Status)
+						}
+					} else {
+						log.Printf("nothing to do; route for %s already has strip_path set\n", path)
 					}
 				}
 			}
